@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Vectorial RGB</title>
+    <style>
+        :root {
+            --bg-dark: #080808;
+            --panel-bg: #0D0D0D;
+            --border: #222222;
+            --text-main: #E2E2E2;
+            --text-muted: #8C8C8C;
+            --accent: #C5A059;
+            --accent-hover: #D4AF37;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.15rem;
+            font-weight: 400;
+            color: #F5F2EB;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            flex: 1;
+        }
+
+        @media (max-width: 950px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            height: fit-content;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--accent);
+            background: #161616;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .file-btn {
+            background-color: #121212;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .file-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        button.action-btn {
+            flex: 1;
+            background-color: #161616;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        button.primary-btn {
+            background-color: #1a160e;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        button.primary-btn:hover {
+            background-color: #262013;
+        }
+
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .formula-banner {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .formula-box {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            background: #080808;
+            padding: 0.6rem 1rem;
+            border-radius: 4px;
+            border-left: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 1150px) {
+            .canvas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .canvas-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .canvas-card.highlight {
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px rgba(197, 160, 89, 0.05);
+        }
+
+        .canvas-card h3 {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 340px;
+            height: 255px;
+            background-color: #050505;
+            border-radius: 2px;
+            cursor: crosshair;
+            border: 1px solid var(--border);
+        }
+
+        .inspector-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1.25rem;
+        }
+
+        .vector-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .v-box {
+            background-color: #080808;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.85rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            color: var(--text-main);
+        }
+
+        .v-box strong {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+
+        .color-swatch {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            vertical-align: middle;
+            margin-right: 6px;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>Editor Vectorial RGB - Espacios Vectoriales R³</h1>
+    </div>
+    <div class="btn-row">
+        <button class="action-btn" onclick="applyPreset('grayscale')">Filtro Escala Grises</button>
+        <button class="action-btn" onclick="applyPreset('blend50')">Mezcla 50% / 50%</button>
+        <button class="action-btn" onclick="applyPreset('warm')">Tono Cálido</button>
+        <button class="action-btn primary-btn" onclick="resetParams()">Reiniciar</button>
+    </div>
+</header>
+
+<div class="container">
+    <aside class="sidebar">
+        <div>
+            <div class="section-title">1. Imágenes Base (v₁, v₂)</div>
+            <div class="btn-row">
+                <label class="file-btn" style="flex:1;">
+                    Imagen 1 (v₁)
+                    <input type="file" id="upload1" accept="image/*">
+                </label>
+                <label class="file-btn" style="flex:1;">
+                    Imagen 2 (v₂)
+                    <input type="file" id="upload2" accept="image/*">
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">2. Escalares de Canal RGB (v₁)</div>
+            <div class="control-group">
+                <div class="control-header"><span>Escalar Rojo (c_R)</span><span id="valR">1.00</span></div>
+                <input type="range" id="sliderR" min="0" max="2" step="0.05" value="1">
+            </div>
+            <div class="control-group">
+                <div class="control-header"><span>Escalar Verde (c_G)</span><span id="valG">1.00</span></div>
+                <input type="range" id="sliderG" min="0" max="2" step="0.05" value="1">
+            </div>
+            <div class="control-group">
+                <div class="control-header"><span>Escalar Azul (c_B)</span><span id="valB">1.00</span></div>
+                <input type="range" id="sliderB" min="0" max="2" step="0.05" value="1">
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">3. Combinación Lineal (α·v₁ + β·v₂)</div>
+            <div class="control-group">
+                <div class="control-header"><span>Coeficiente (α)</span><span id="valAlpha">1.00</span></div>
+                <input type="range" id="sliderAlpha" min="0" max="1.5" step="0.05" value="1">
+            </div>
+            <div class="control-group">
+                <div class="control-header"><span>Coeficiente (β)</span><span id="valBeta">0.00</span></div>
+                <input type="range" id="sliderBeta" min="0" max="1.5" step="0.05" value="0">
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">4. Desplazamiento de Brillo</div>
+            <div class="control-group">
+                <div class="control-header"><span>Escalar Brillo</span><span id="valBright">0</span></div>
+                <input type="range" id="sliderBright" min="-150" max="150" step="5" value="0">
+            </div>
+        </div>
+
+        <button class="action-btn primary-btn" onclick="downloadResult()">Descargar Resultado PNG</button>
+    </aside>
+
+    <main class="workspace">
+        <div class="formula-banner">
+            <div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.05em;">Ecuación Vectorial Activa:</span>
+                <div class="formula-box" id="liveFormula">
+                    v_out = 1.00 · [1.00·R1, 1.00·G1, 1.00·B1] + 0.00 · [R2, G2, B2] + (0)
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-grid">
+            <div class="canvas-card">
+                <h3><span>Imagen 1 (v₁)</span><span>320×240</span></h3>
+                <canvas id="canvas1" width="320" height="240"></canvas>
+            </div>
+            <div class="canvas-card">
+                <h3><span>Imagen 2 (v₂)</span><span>320×240</span></h3>
+                <canvas id="canvas2" width="320" height="240"></canvas>
+            </div>
+            <div class="canvas-card highlight">
+                <h3><span>Resultado (v_out)</span><span style="color:var(--accent);">Combinación Lineal</span></h3>
+                <canvas id="canvasOut" width="320" height="240"></canvas>
+            </div>
+        </div>
+
+        <div class="inspector-panel">
+            <div class="section-title">Inspector Vectorial por Píxel (Mueve el cursor sobre cualquier imagen)</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                Coordenada actual: <strong id="coordText" style="color:var(--text-main);">(x: 160, y: 120)</strong> — Evaluación numérica en R³ [0, 255]:
+            </p>
+            <div class="vector-cards">
+                <div class="v-box">
+                    <strong><span class="color-swatch" id="swatch1"></span>Vector Imagen 1 (v₁)</strong>
+                    <div id="vec1Text">[0, 0, 0]</div>
+                </div>
+                <div class="v-box">
+                    <strong><span class="color-swatch" id="swatch2"></span>Vector Imagen 2 (v₂)</strong>
+                    <div id="vec2Text">[0, 0, 0]</div>
+                </div>
+                <div class="v-box" style="border-color: var(--accent);">
+                    <strong><span class="color-swatch" id="swatchOut"></span>Vector Resultante (v_out)</strong>
+                    <div id="vecOutText" style="color: var(--accent);">[0, 0, 0]</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const W = 320, H = 240;
+    const c1 = document.getElementById('canvas1'), ctx1 = c1.getContext('2d');
+    const c2 = document.getElementById('canvas2'), ctx2 = c2.getContext('2d');
+    const cOut = document.getElementById('canvasOut'), ctxOut = cOut.getContext('2d');
+
+    let selectedX = 160, selectedY = 120;
+
+    function initDefaultImages() {
+        const grad1 = ctx1.createLinearGradient(0, 0, W, H);
+        grad1.addColorStop(0, '#854d0e');
+        grad1.addColorStop(0.5, '#1e293b');
+        grad1.addColorStop(1, '#451a03');
+        ctx1.fillStyle = grad1;
+        ctx1.fillRect(0, 0, W, H);
+
+        ctx1.fillStyle = '#C5A059';
+        ctx1.beginPath();
+        ctx1.arc(110, 120, 55, 0, Math.PI * 2);
+        ctx1.fill();
+
+        ctx1.fillStyle = '#E2E2E2';
+        ctx1.font = 'bold 18px Inter, sans-serif';
+        ctx1.fillText('V1', 101, 126);
+
+        ctx2.fillStyle = '#121212';
+        ctx2.fillRect(0, 0, W, H);
+        for (let i = 0; i < W; i += 20) {
+            ctx2.fillStyle = i % 40 === 0 ? '#1a160e' : '#222222';
+            ctx2.fillRect(i, 0, 10, H);
+        }
+        ctx2.fillStyle = '#C5A059';
+        ctx2.beginPath();
+        ctx2.arc(210, 120, 60, 0, Math.PI * 2);
+        ctx2.fill();
+        ctx2.fillStyle = '#080808';
+        ctx2.font = 'bold 16px Inter, sans-serif';
+        ctx2.fillText('V2', 198, 126);
+
+        render();
+    }
+
+    function handleImageUpload(inputElement, targetCtx) {
+        inputElement.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    targetCtx.clearRect(0, 0, W, H);
+                    targetCtx.drawImage(img, 0, 0, W, H);
+                    render();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    handleImageUpload(document.getElementById('upload1'), ctx1);
+    handleImageUpload(document.getElementById('upload2'), ctx2);
+
+    function clamp(val) {
+        return Math.max(0, Math.min(255, Math.round(val)));
+    }
+
+    function render() {
+        const cR = parseFloat(document.getElementById('sliderR').value);
+        const cG = parseFloat(document.getElementById('sliderG').value);
+        const cB = parseFloat(document.getElementById('sliderB').value);
+        const alpha = parseFloat(document.getElementById('sliderAlpha').value);
+        const beta = parseFloat(document.getElementById('sliderBeta').value);
+        const bright = parseFloat(document.getElementById('sliderBright').value);
+
+        document.getElementById('valR').textContent = cR.toFixed(2);
+        document.getElementById('valG').textContent = cG.toFixed(2);
+        document.getElementById('valB').textContent = cB.toFixed(2);
+        document.getElementById('valAlpha').textContent = alpha.toFixed(2);
+        document.getElementById('valBeta').textContent = beta.toFixed(2);
+        document.getElementById('valBright').textContent = bright;
+
+        document.getElementById('liveFormula').textContent = 
+            `v_out = ${alpha.toFixed(2)}·[${cR.toFixed(2)}·R1, ${cG.toFixed(2)}·G1, ${cB.toFixed(2)}·B1] + ${beta.toFixed(2)}·[R2, G2, B2] + (${bright})`;
+
+        const imgData1 = ctx1.getImageData(0, 0, W, H);
+        const imgData2 = ctx2.getImageData(0, 0, W, H);
+        const outData = ctxOut.createImageData(W, H);
+
+        const d1 = imgData1.data;
+        const d2 = imgData2.data;
+        const dOut = outData.data;
+
+        for (let i = 0; i < d1.length; i += 4) {
+            const r1 = d1[i] * cR;
+            const g1 = d1[i + 1] * cG;
+            const b1 = d1[i + 2] * cB;
+
+            const r2 = d2[i];
+            const g2 = d2[i + 1];
+            const b2 = d2[i + 2];
+
+            dOut[i]     = clamp(alpha * r1 + beta * r2 + bright);
+            dOut[i + 1] = clamp(alpha * g1 + beta * g2 + bright);
+            dOut[i + 2] = clamp(alpha * b1 + beta * b2 + bright);
+            dOut[i + 3] = 255;
+        }
+
+        ctxOut.putImageData(outData, 0, 0);
+        updateInspector(imgData1.data, imgData2.data, outData.data);
+    }
+
+    function updateInspector(d1, d2, dOut) {
+        const idx = (selectedY * W + selectedX) * 4;
+        const v1 = [d1[idx], d1[idx + 1], d1[idx + 2]];
+        const v2 = [d2[idx], d2[idx + 1], d2[idx + 2]];
+        const vOut = [dOut[idx], dOut[idx + 1], dOut[idx + 2]];
+
+        document.getElementById('coordText').textContent = `(x: ${selectedX}, y: ${selectedY})`;
+        document.getElementById('vec1Text').textContent = `[${v1[0]}, ${v1[1]}, ${v1[2]}]`;
+        document.getElementById('vec2Text').textContent = `[${v2[0]}, ${v2[1]}, ${v2[2]}]`;
+        document.getElementById('vecOutText').textContent = `[${vOut[0]}, ${vOut[1]}, ${vOut[2]}]`;
+
+        document.getElementById('swatch1').style.backgroundColor = `rgb(${v1[0]},${v1[1]},${v1[2]})`;
+        document.getElementById('swatch2').style.backgroundColor = `rgb(${v2[0]},${v2[1]},${v2[2]})`;
+        document.getElementById('swatchOut').style.backgroundColor = `rgb(${vOut[0]},${vOut[1]},${vOut[2]})`;
+    }
+
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+        slider.addEventListener('input', render);
+    });
+
+    [c1, c2, cOut].forEach(canvas => {
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            selectedX = Math.floor(((e.clientX - rect.left) / rect.width) * W);
+            selectedY = Math.floor(((e.clientY - rect.top) / rect.height) * H);
+            selectedX = Math.max(0, Math.min(W - 1, selectedX));
+            selectedY = Math.max(0, Math.min(H - 1, selectedY));
+            render();
+        });
+    });
+
+    function applyPreset(type) {
+        if (type === 'grayscale') {
+            document.getElementById('sliderR').value = 0.30;
+            document.getElementById('sliderG').value = 0.59;
+            document.getElementById('sliderB').value = 0.11;
+            document.getElementById('sliderAlpha').value = 1.0;
+            document.getElementById('sliderBeta').value = 0.0;
+            document.getElementById('sliderBright').value = 0;
+        } else if (type === 'blend50') {
+            document.getElementById('sliderR').value = 1.0;
+            document.getElementById('sliderG').value = 1.0;
+            document.getElementById('sliderB').value = 1.0;
+            document.getElementById('sliderAlpha').value = 0.50;
+            document.getElementById('sliderBeta').value = 0.50;
+            document.getElementById('sliderBright').value = 0;
+        } else if (type === 'warm') {
+            document.getElementById('sliderR').value = 1.35;
+            document.getElementById('sliderG').value = 1.05;
+            document.getElementById('sliderB').value = 0.70;
+            document.getElementById('sliderAlpha').value = 1.0;
+            document.getElementById('sliderBeta').value = 0.0;
+            document.getElementById('sliderBright').value = 10;
+        }
+        render();
+    }
+
+    function resetParams() {
+        document.getElementById('sliderR').value = 1;
+        document.getElementById('sliderG').value = 1;
+        document.getElementById('sliderB').value = 1;
+        document.getElementById('sliderAlpha').value = 1;
+        document.getElementById('sliderBeta').value = 0;
+        document.getElementById('sliderBright').value = 0;
+        render();
+    }
+
+    function downloadResult() {
+        const link = document.createElement('a');
+        link.download = 'resultado_combinacion_lineal.png';
+        link.href = cOut.toDataURL();
+        link.click();
+    }
+
+    initDefaultImages();
+</script>
+</body>
+</html>
